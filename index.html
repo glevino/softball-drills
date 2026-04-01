@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hurricanes Drill Library · 12U Softball</title>
+<style>
+  :root {
+    --navy: #0f1f3d;
+    --navy2: #1a2744;
+    --slate: #334155;
+    --muted: #64748b;
+    --faint: #94a3b8;
+    --border: #e2e8f0;
+    --bg: #f8f7f4;
+    --white: #ffffff;
+    --comm-bg:#fef3c7; --comm-b:#f59e0b; --comm-t:#92400e;
+    --throw-bg:#dbeafe; --throw-b:#3b82f6; --throw-t:#1e3a5f;
+    --gb-bg:#dcfce7; --gb-b:#22c55e; --gb-t:#14532d;
+    --pf-bg:#e0f2fe; --pf-b:#0ea5e9; --pf-t:#0c4a6e;
+    --hit-bg:#fce7f3; --hit-b:#ec4899; --hit-t:#831843;
+    --br-bg:#ede9fe; --br-b:#8b5cf6; --br-t:#4c1d95;
+    --gs-bg:#fff7ed; --gs-b:#f97316; --gs-t:#7c2d12;
+    --iq-low:#22c55e; --iq-med:#f59e0b; --iq-high:#ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; background: var(--bg); color: var(--slate); }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--navy2) 0%, var(--navy) 60%, #1e3a5f 100%);
+    padding: 28px 20px 22px; position: relative; overflow: hidden;
+  }
+  header::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(96,165,250,0.08) 0%, transparent 40%);
+  }
+  .header-inner { position: relative; }
+  .header-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .header-top h1 { color:#fff; font-size:22px; letter-spacing:-0.5px; }
+  .header-top .eyebrow { color:#93c5fd; font-size:10px; letter-spacing:3px; text-transform:uppercase; font-family:system-ui,sans-serif; font-weight:600; }
+  .header-logo { font-size:28px; }
+  .header-cats { display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; }
+  .header-cats span { font-family:system-ui,sans-serif; font-size:11px; color:#cbd5e1; }
+  .header-cats b { color:#60a5fa; }
+  .header-meta { color:#64748b; font-family:system-ui,sans-serif; font-size:11px; margin-top:6px; }
+
+  /* FILTERS */
+  #filters {
+    background:#fff; border-bottom:1px solid var(--border);
+    padding:14px 20px; position:sticky; top:0; z-index:100;
+    box-shadow:0 1px 4px rgba(0,0,0,0.06);
+  }
+  #search {
+    width:100%; padding:9px 14px; border:1.5px solid var(--border); border-radius:8px;
+    font-size:14px; font-family:system-ui,sans-serif; background:#f8fafc;
+    margin-bottom:10px; outline:none; color:var(--slate);
+  }
+  #search:focus { border-color:#3b82f6; }
+  .filter-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  select {
+    padding:7px 10px; border:1.5px solid var(--border); border-radius:8px;
+    font-size:12px; font-family:system-ui,sans-serif; background:#fff;
+    color:var(--slate); cursor:pointer; outline:none;
+  }
+  #drill-count { font-family:system-ui,sans-serif; font-size:12px; color:var(--faint); margin-left:auto; }
+
+  /* CATEGORY PILLS */
+  #cat-pills { padding:12px 20px 4px; display:flex; flex-wrap:wrap; gap:7px; }
+  .cat-pill {
+    display:flex; align-items:center; gap:5px; padding:4px 10px;
+    border-radius:20px; font-size:11px; font-family:system-ui,sans-serif;
+    font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s;
+    background:none;
+  }
+  .cat-pill .dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+
+  /* DRILL LIST */
+  #drill-list { padding:10px 20px 0; }
+  .drill-card {
+    background:#fff; border-radius:12px; margin-bottom:9px;
+    border:1.5px solid var(--border);
+    box-shadow:0 1px 3px rgba(0,0,0,0.04); overflow:hidden;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .drill-card.open { box-shadow:0 4px 16px rgba(0,0,0,0.08); }
+  .drill-header {
+    width:100%; text-align:left; background:none; border:none;
+    padding:13px 16px; cursor:pointer; display:flex; align-items:flex-start; gap:12px;
+  }
+  .drill-icon {
+    width:34px; height:34px; border-radius:8px; display:flex;
+    align-items:center; justify-content:center; flex-shrink:0; font-size:15px;
+    border:1.5px solid;
+  }
+  .drill-title-area { flex:1; min-width:0; }
+  .drill-name-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:5px; }
+  .drill-name { font-weight:700; font-size:14px; color:#1e293b; }
+  .competitive-badge {
+    background:#fef3c7; color:#92400e; font-size:10px; padding:2px 7px;
+    border-radius:10px; font-family:system-ui,sans-serif; font-weight:700;
+    border:1px solid #fde68a; white-space:nowrap;
+  }
+  .drill-tags { display:flex; gap:5px; flex-wrap:wrap; }
+  .tag {
+    padding:2px 8px; border-radius:10px; font-size:11px;
+    font-family:system-ui,sans-serif; font-weight:600; border:1px solid;
+  }
+  .chevron { color:var(--faint); font-size:14px; flex-shrink:0; margin-top:4px; transition:transform .2s; }
+  .drill-card.open .chevron { transform:rotate(180deg); }
+
+  /* DRILL BODY */
+  .drill-body { padding:0 16px 16px; border-top:1px solid rgba(0,0,0,0.06); }
+  .drill-body-inner { margin-top:12px; display:grid; gap:12px; }
+  .section-label {
+    font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--faint); font-family:system-ui,sans-serif; font-weight:700; margin-bottom:3px;
+  }
+  .body-text { font-size:13px; color:#475569; font-family:system-ui,sans-serif; line-height:1.6; margin-top:4px; }
+  .cue-box {
+    background:#fffbeb; border-left:3px solid #f59e0b;
+    padding:10px 12px; border-radius:0 8px 8px 0;
+  }
+  .cue-text { font-size:13px; color:#78350f; font-family:system-ui,sans-serif; font-style:italic; line-height:1.5; margin-top:3px; }
+  .meta-row { display:flex; gap:16px; flex-wrap:wrap; }
+  .meta-item { font-family:system-ui,sans-serif; }
+  .meta-label { font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:1px; font-weight:700; }
+  .meta-val { font-size:13px; color:var(--slate); margin-top:1px; }
+  .skill-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .skill-chip { padding:3px 9px; border-radius:12px; font-size:11px; font-family:system-ui,sans-serif; font-weight:600; border:1px solid; }
+  .progressions ul { margin:4px 0 0; padding-left:18px; }
+  .progressions li { font-size:13px; color:#475569; font-family:system-ui,sans-serif; line-height:1.7; }
+
+  /* FOOTER */
+  footer { padding:20px; font-family:system-ui,sans-serif; font-size:11px; color:var(--faint); text-align:center; line-height:1.8; }
+
+  /* EMPTY STATE */
+  #empty { display:none; text-align:center; padding:40px; color:var(--faint); font-family:system-ui,sans-serif; }
+
+  @media (max-width:480px) {
+    header { padding:20px 16px 18px; }
+    #filters { padding:12px 16px; }
+    #cat-pills { padding:10px 16px 4px; }
+    #drill-list { padding:8px 16px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="header-logo">🌀</div>
+      <div>
+        <div class="eyebrow">Black Rock Hurricanes · 12U Softball</div>
+        <h1>Drill Library</h1>
+      </div>
+    </div>
+    <div class="header-cats" id="header-cats"></div>
+    <div class="header-meta" id="header-meta"></div>
+  </div>
+</header>
+
+<div id="filters">
+  <input type="search" id="search" placeholder="Search drills, skills, sources…">
+  <div class="filter-row">
+    <select id="filter-cat">
+      <option value="">All Categories</option>
+    </select>
+    <select id="filter-comp">
+      <option value="">All Types</option>
+      <option value="competitive">🏆 Competitive</option>
+      <option value="non">Non-competitive</option>
+    </select>
+    <select id="filter-iq">
+      <option value="">All IQ Levels</option>
+      <option value="Low">🟢 Low IQ</option>
+      <option value="Medium">🟡 Medium IQ</option>
+      <option value="High">🔴 High IQ</option>
+    </select>
+    <span id="drill-count"></span>
+  </div>
+</div>
+
+<div id="cat-pills"></div>
+<div id="drill-list"></div>
+<div id="empty">No drills match. Try broadening your filters.</div>
+
+<footer>
+  Sources: GoRout · SkillShark · Revolution Softball Camp · Softball Tutor · Softball Spot · JustBats · Discuss Fastpitch · Coaching Youth Softball · Rush Order Tees · The Hitting Vault<br>
+  Built for the Black Rock Hurricanes coaching staff · Grayson Levino
+</footer>
+
+<script>
+const DRILLS = [{"id": 1, "name": "Circle of Trust", "category": "Communication & Focus", "skills": ["Communication", "Focus"], "competitive": false, "iqLevel": "Low", "duration": "5 min", "players": "Full team", "equipment": "1 ball", "description": "Players in a circle. Ball moves via underhanded tosses \u2014 thrower must make eye contact AND call receiver's name before releasing. No name = ball goes back to start.", "coachingCue": "Eyes before hands. If you can't name 'em, you're not ready to throw to 'em.", "source": "Original", "progressions": ["Speed up the pace", "Add a second ball", "Silent player does 5 jumping jacks"], "intro": "Practice 2+"}, {"id": 2, "name": "Number Ball", "category": "Communication & Focus", "skills": ["Focus", "Tracking"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Full team (split groups)", "equipment": "Balls with 1\u20134 marked on panels", "description": "Write numbers 1\u20134 on ball panels with a marker. Coach tosses fly balls or grounders \u2014 player must call out the number on the ball as they catch it. No number called = rep doesn't count.", "coachingCue": "Track it all the way in. If your eyes leave the ball, you're guessing.", "source": "Original", "progressions": ["Increase distance", "Pop flies only", "Call number before the catch"], "intro": "Practice 2\u20133"}, {"id": 3, "name": "Coach Says", "category": "Communication & Focus", "skills": ["Focus", "Reaction", "Footwork"], "competitive": false, "iqLevel": "Low", "duration": "7 min", "players": "Full team", "equipment": "None", "description": "Simon Says for softball. Coach calls movement cues and fakes. Players must stay locked in. Wrong move or early reaction = freeze.", "coachingCue": "The play can happen at any second. Act like it.", "source": "Original / Coaching Youth Softball", "progressions": ["Add a ball call mid-drill", "Players call cues to each other"], "intro": "Practice 3"}, {"id": 4, "name": "Relay Race With a Call", "category": "Communication & Focus", "skills": ["Communication", "Throwing", "Chatter"], "competitive": true, "iqLevel": "Medium", "duration": "10 min", "players": "Full team (2 lines)", "equipment": "Balls", "description": "Standard relay throwing line \u2014 but every player NOT holding the ball must be actively calling direction or encouragement. Coaches listen for silence. Silent players move to back of line.", "coachingCue": "You're never not in this play. Your voice is part of the defense.", "source": "Original", "progressions": ["Add a runner for urgency", "Score for fastest relay + no silence penalties"], "intro": "Practice 4+"}, {"id": 5, "name": "Freeze Frame", "category": "Communication & Focus", "skills": ["Softball IQ", "Focus", "Situational Awareness"], "competitive": false, "iqLevel": "High", "duration": "10 min", "players": "Full team", "equipment": "Varies", "description": "Mid-drill, coach randomly yells 'FREEZE.' Everyone stops exactly where they are. Coach points to one player: 'Where's the play right now?' No wrong answers penalized \u2014 just think out loud.", "coachingCue": "You should always know the answer before I ask. Know it before the ball is hit.", "source": "Original", "progressions": ["Ask two players at once", "Runner on base adds complexity"], "intro": "Practice 4+"}, {"id": 6, "name": "Catch Not Fetch", "category": "Communication & Focus", "skills": ["Communication", "Throwing Accuracy", "Focus"], "competitive": true, "iqLevel": "Low", "duration": "8 min", "players": "Full team (circle)", "equipment": "1\u20133 balls", "description": "Players circle up 15\u201320 feet apart. Throw clockwise or counterclockwise \u2014 anyone who drops a good throw or makes a wild throw owes a lap. After 2 laps, inject a second ball, then a third.", "coachingCue": "Stop playing fetch. Make a throw worth catching.", "source": "Softball Tutor", "progressions": ["Add 2nd ball", "Add lap penalty for drops", "Develop relay-pivot with same circle"], "intro": "Practice 2+"}, {"id": 7, "name": "Bat Tic-Tac-Toe", "category": "Communication & Focus", "skills": ["Throwing Accuracy", "Focus", "Communication"], "competitive": true, "iqLevel": "Low", "duration": "8 min", "players": "Two lines (partners)", "equipment": "Balls, 3x3 target grid", "description": "Players in two lines take turns throwing to a 3x3 grid target. Each team tries to get three throws in a row \u2014 tic-tac-toe rules. Misses count for the other team.", "coachingCue": "Pick a square, throw to a spot. Accuracy over power every time.", "source": "Coaching Youth Softball", "progressions": ["Increase distance each round", "Add a time limit per throw"], "intro": "Practice 3+"}, {"id": 8, "name": "Countdown", "category": "Communication & Focus", "skills": ["Quick Release", "Focus", "Communication"], "competitive": true, "iqLevel": "Low", "duration": "7 min", "players": "Partners (20 ft apart)", "equipment": "Balls", "description": "Partners make good throws back and forth as many times as possible while coach counts down from 30 to zero. The player who does NOT have the ball at zero wins.", "coachingCue": "Don't hold it. Get rid of it fast and get ready again.", "source": "Softball Tutor", "progressions": ["Reduce countdown to 20", "Partner at farther distance"], "intro": "Practice 2+"}, {"id": 9, "name": "Don't Let It Drop", "category": "Communication & Focus", "skills": ["Focus", "Reaction", "Fun"], "competitive": true, "iqLevel": "Low", "duration": "6 min", "players": "Partners (kneeling)", "equipment": "Balls", "description": "Players on knees facing each other. Coach calls out 'Knees,' 'Head,' 'Ankles' randomly until 'BALL' is called \u2014 then both race to grab the ball first.", "coachingCue": "Stay locked in. The ball comes when you least expect it.", "source": "Coaching Youth Softball", "progressions": ["Faster cue pace", "Standing version", "Add a second ball"], "intro": "Practice 2+"}, {"id": 10, "name": "Back to Front", "category": "Communication & Focus", "skills": ["Focus", "Reaction", "Anti-Anticipation"], "competitive": false, "iqLevel": "Medium", "duration": "10 min", "players": "Full infield", "equipment": "Fungo, balls", "description": "All infielders face the outfield (backs to coach). On the crack of the bat, they spin and play whatever ball is hit to them, or cover their bag if not. Prevents anticipating the play.", "coachingCue": "React to the ball, not your guess about where it's going.", "source": "Discuss Fastpitch", "progressions": ["Add outfielders", "Coach calls 'go' before swing so they can turn first"], "intro": "Practice 5+"}, {"id": 11, "name": "Zombie vs. Survivor", "category": "Communication & Focus", "skills": ["Communication", "Softball IQ", "Fun"], "competitive": true, "iqLevel": "Medium", "duration": "12 min", "players": "Full team", "equipment": "Full field", "description": "One team (Zombies) plays defense and tries to get every batter out. Survivors hit and try to stay alive. If tagged out, they join the Zombies. Last Survivor wins.", "coachingCue": "Defense communicates like a pack. Every zombie knows the play.", "source": "Coaching Youth Softball", "progressions": ["Add base runners", "Put a time limit on the game"], "intro": "Practice 6+"}, {"id": 12, "name": "One-Knee Drill", "category": "Throwing", "skills": ["Throwing Mechanics", "Arm Path"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Partners", "equipment": "Balls, gloves", "description": "Players kneel on throwing-side knee, isolating upper body. Focus: grip across seams, L-position arm path, and clean follow-through. Best early-season mechanics reset.", "coachingCue": "Elbow up, elbow leads. Snap through the release.", "source": "GoRout / SkillShark", "progressions": ["Stand up and replicate arm path", "Add targets"], "intro": "Practice 1\u20133"}, {"id": 13, "name": "Rock and Fire", "category": "Throwing", "skills": ["Throwing Mechanics", "Weight Transfer"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Partners", "equipment": "Balls, gloves", "description": "Players rock weight back and forth three times, throw on the final forward shift. Builds rhythm and teaches weight transfer. Also called the Pendulum Drill.", "coachingCue": "Load back, fire forward. The rock is the wind-up \u2014 don't skip it.", "source": "GoRout / SkillShark", "progressions": ["Reduce rock to one movement", "Throw to targets"], "intro": "Practice 1\u20133"}, {"id": 14, "name": "Step-Back Partners", "category": "Throwing", "skills": ["Throwing Accuracy", "Arm Strength"], "competitive": true, "iqLevel": "Low", "duration": "10 min", "players": "Partners", "equipment": "Balls, gloves", "description": "Partners start 10 feet apart. Clean catch = both step back 3 feet. Drop = you're out. Last pair standing wins. Builds accuracy under increasing pressure.", "coachingCue": "Accurate first, then far. Power without accuracy is just a bad throw.", "source": "GoRout", "progressions": ["Time limit per round", "Add cones as distance markers"], "intro": "Practice 3+"}, {"id": 15, "name": "Hit the Helmet", "category": "Throwing", "skills": ["Throwing Accuracy"], "competitive": true, "iqLevel": "Low", "duration": "10 min", "players": "Full team (line)", "equipment": "Helmet, balls", "description": "Helmet placed at home plate. Players line up between 2nd and 3rd and try to hit it. After each round, move it an inch farther. 5 rounds.", "coachingCue": "Pick a spot and throw to it, not at it. There's a difference.", "source": "SkillShark", "progressions": ["Use different targets", "Throw from different field positions"], "intro": "Practice 4+"}, {"id": 16, "name": "Target Throw", "category": "Throwing", "skills": ["Throwing Accuracy", "Pressure Reps"], "competitive": true, "iqLevel": "Low", "duration": "10 min", "players": "Full team (stations)", "equipment": "Cones or buckets, balls", "description": "Set up cones or buckets at first base. Each accurate throw earns a point. Light competition while building precision.", "coachingCue": "Aim small, miss small. Pick the smallest target and throw right at it.", "source": "GoRout / SkillShark", "progressions": ["Move targets farther", "Add time pressure"], "intro": "Practice 2+"}, {"id": 17, "name": "Quick Release Stopwatch", "category": "Throwing", "skills": ["Quick Release", "Footwork"], "competitive": true, "iqLevel": "Medium", "duration": "12 min", "players": "Stations (infield or OF)", "equipment": "Balls, stopwatch", "description": "Start stopwatch when ball hits glove \u2014 stop when it leaves the hand. Average: 1.5 sec. Goal: under 0.65 sec. That 1-second difference is 20 feet of baserunning.", "coachingCue": "Catch it and get rid of it. The runner isn't waiting for you to get comfortable.", "source": "Discuss Fastpitch", "progressions": ["Post times and challenge personal bests", "Add a live baserunner for real stakes"], "intro": "Practice 5+"}, {"id": 18, "name": "Crow Hop Relay", "category": "Throwing", "skills": ["Throwing Mechanics", "Crow Hop", "Arm Strength"], "competitive": true, "iqLevel": "Low", "duration": "10 min", "players": "2 teams", "equipment": "Balls", "description": "Two relay lines facing each other at distance. Each throw must include a proper crow hop \u2014 no shuffle, no flat feet. Points deducted for non-compliant throws.", "coachingCue": "Step into every throw. A flat-footed throw is a weak throw.", "source": "GoRout", "progressions": ["Increase distance", "First team with 5 clean relays wins"], "intro": "Practice 4+"}, {"id": 19, "name": "Throwing Direction Drill", "category": "Throwing", "skills": ["Throwing Mechanics", "Follow-Through", "Momentum"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Partners or stations", "equipment": "Balls, gloves", "description": "Players throw to a partner and move forward through the momentum of the throw rather than returning to a line. Stops the habit of falling back after release.", "coachingCue": "Follow through forward. Your body should keep moving in the direction of your throw.", "source": "Softball Tutor", "progressions": ["Add a target at distance", "Combine with crow hop"], "intro": "Practice 2+"}, {"id": 20, "name": "Around the Field", "category": "Throwing", "skills": ["Quick Release", "Communication", "Throwing Accuracy"], "competitive": true, "iqLevel": "Medium", "duration": "10 min", "players": "Full team (one per position)", "equipment": "Balls", "description": "One player at every position. P\u2192C\u2192SS\u21921B\u21923B\u21922B\u2192LF\u2192CF\u2192RF\u2192back to P. Each throws as fast and clean as possible. Time it and challenge the team to beat it.", "coachingCue": "Every throw matters. The weakest link sets the time.", "source": "Discuss Fastpitch", "progressions": ["Post times", "Reverse order", "Two balls at once for advanced group"], "intro": "Practice 4+"}, {"id": 21, "name": "Face the Base", "category": "Throwing", "skills": ["Throwing Accuracy", "Follow-Through"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Full team (stations)", "equipment": "Balls, base hung on backstop", "description": "Hang a base on the backstop as a throwing target. At the end of the throwing motion, player must 'face the base' \u2014 shoulders square to target, completing the follow-through.", "coachingCue": "Finish facing where you threw. If you turn away, your throw turned away too.", "source": "Softball Spot", "progressions": ["Move players farther back", "Add footwork before throwing"], "intro": "Practice 1\u20133"}, {"id": 22, "name": "Heel-Toe Grounders", "category": "Fielding: Ground Balls", "skills": ["Footwork", "Fielding Mechanics"], "competitive": false, "iqLevel": "Low", "duration": "10 min", "players": "2 stations", "equipment": "Balls, gloves", "description": "Coach rolls ground balls while players focus on heel-toe footwork, staying low, and making clean throws.", "coachingCue": "Heel-toe into the ball, not back from it. Attack the grounder.", "source": "Hurricanes P1", "progressions": ["Add throw decision (1st or 2nd)", "Increase ball speed"], "intro": "Practice 1+"}, {"id": 23, "name": "Bare Hand Catch", "category": "Fielding: Ground Balls", "skills": ["Soft Hands", "Fielding Mechanics"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Partners or stations", "equipment": "Balls (no gloves)", "description": "Remove gloves. Coach rolls ground balls from 10\u201315 feet. No glove pocket = forces soft hands and fielding out front. Fixes bad habits fast.", "coachingCue": "Field it out front like you're presenting the ball to the coach. No reaching back.", "source": "GoRout", "progressions": ["Add gloves back and repeat", "Short-hops only"], "intro": "Practice 3+"}, {"id": 24, "name": "Triangle Fielding", "category": "Fielding: Ground Balls", "skills": ["Footwork", "Glove Angles", "Fielding Mechanics"], "competitive": false, "iqLevel": "Low", "duration": "10 min", "players": "Partners or stations", "equipment": "Balls, gloves, cone", "description": "Coach rolls balls straight, forehand, and backhand in sequence. Teaches glove positioning and footwork for every angle seen in a game.", "coachingCue": "Three looks, three positions. Know which one's coming before the ball leaves my hand.", "source": "GoRout / SkillShark", "progressions": ["Call direction randomly", "No-glove version first"], "intro": "Practice 2+"}, {"id": 25, "name": "Knockout Fielding", "category": "Fielding: Ground Balls", "skills": ["Fielding Mechanics", "Pressure Reps"], "competitive": true, "iqLevel": "Low", "duration": "10 min", "players": "Full team (line)", "equipment": "Balls, gloves", "description": "Players line up. Each fields one ground ball. Clean play = stay. Error = sit. Last player standing wins.", "coachingCue": "One play, one chance. Make it count.", "source": "GoRout / Rush Order Tees", "progressions": ["Add throw to first", "Require specific footwork to stay in"], "intro": "Practice 4+"}, {"id": 26, "name": "Hoover", "category": "Fielding: Ground Balls", "skills": ["Soft Hands", "Stay Down", "Fielding Mechanics"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Stations", "equipment": "Balls, gloves", "description": "Infielder 30\u201340 ft from coach with glove open, fingertips on ground. Coach rolls ball \u2014 glove stays in contact with ground and open to ball the entire time until the last upward movement.", "coachingCue": "Glove up, never down. Let the ball come up to you \u2014 don't go after it early.", "source": "Softball Tutor", "progressions": ["Add fungo to increase speed", "Add throw to first"], "intro": "Practice 3+"}, {"id": 27, "name": "Bucket Drill", "category": "Fielding: Ground Balls", "skills": ["Quick Release", "Throwing Accuracy", "Fielding Mechanics"], "competitive": true, "iqLevel": "Low", "duration": "10 min", "players": "Two teams", "equipment": "5-gallon bucket, balls", "description": "Bucket upside-down on first base. Coach drops ball in front of SS line. Player has 3 seconds (counted aloud) to field and throw to hit the bucket. Keep score. Switch sides.", "coachingCue": "Three seconds. Field it, throw it, hit the target. That's the whole job.", "source": "Softball Tutor", "progressions": ["Add second team throwing simultaneously", "Replace bucket with wall ball on tee"], "intro": "Practice 4+"}, {"id": 28, "name": "Backpeddle Fielding", "category": "Fielding: Ground Balls", "skills": ["Footwork", "Conditioning", "Fielding Mechanics"], "competitive": false, "iqLevel": "Low", "duration": "10 min", "players": "Groups of 3", "equipment": "Balls, gloves", "description": "Player moves forward from starting line. Coach rolls a ground ball \u2014 player fields it, then backpedals as fast as possible to starting line, flips ball to side players. Repeat 3 balls per player.", "coachingCue": "Head up while you backpedal. Don't watch your feet \u2014 watch the field.", "source": "Softball Tutor", "progressions": ["Increase roll speed", "Add lateral movement after field before backpedaling"], "intro": "Practice 3+"}, {"id": 29, "name": "Fence Drill", "category": "Fielding: Ground Balls", "skills": ["Lateral Quickness", "Reaction", "Focus"], "competitive": true, "iqLevel": "Medium", "duration": "10 min", "players": "One at a time", "equipment": "Fungo, balls", "description": "Fielder stands with back 6 ft from fence, covering 20 ft laterally. Fungo hitter fires 10 balls left/right/up/down at quickening pace from 35 ft. Score: how many balls prevented from hitting the fence. Clean catch not required.", "coachingCue": "Don't worry about clean \u2014 worry about fast. Stop the ball, save the run.", "source": "Softball Tutor", "progressions": ["Quicken pace between fungos", "End-of-season goal: 8\u201310 out of 10"], "intro": "Practice 6+"}, {"id": 30, "name": "Charging Drill", "category": "Fielding: Ground Balls", "skills": ["Charging the Ball", "Footwork", "Throwing"], "competitive": false, "iqLevel": "Medium", "duration": "10 min", "players": "Line (70 ft from tosser)", "equipment": "Balls, gloves", "description": "Tosser rolls slow ground ball to midpoint \u2014 player must charge it aggressively at full speed, field at midpoint, and throw back.", "coachingCue": "Go get it. The ball is not coming to you fast enough \u2014 you have to go to it.", "source": "Softball Tutor", "progressions": ["Outfielders start at 90 ft", "Add throw to first instead of back to tosser"], "intro": "Practice 4+"}, {"id": 31, "name": "Double Play Drill", "category": "Fielding: Ground Balls", "skills": ["Footwork", "Softball IQ", "Quick Release", "Communication"], "competitive": false, "iqLevel": "High", "duration": "12 min", "players": "Full infield", "equipment": "Fungo, balls", "description": "Catcher plus 2 at 1B, rest split SS/2B. Coach hits grounder to SS \u2014 2B runs to 2B, catches, pivots, throws to 1B. Switch. Final phase: coach hits randomly \u2014 both react in real time.", "coachingCue": "The pivot player owns second base. Get there early. Don't wait for the ball.", "source": "Softball Tutor", "progressions": ["Add live baserunner at first", "Randomly hit to either SS or 2B"], "intro": "Practice 5+"}, {"id": 32, "name": "Drop Step Drill", "category": "Fielding: Pop Flies", "skills": ["Drop Step", "Footwork"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Full team", "equipment": "None", "description": "No ball yet. Coach calls 'left' or 'right' \u2014 players drop-step and sprint 3\u20134 steps, then freeze. Building the instinct before adding the catch.", "coachingCue": "First step is always back and out \u2014 never forward. Trust your drop step.", "source": "Hurricanes P2 plan", "progressions": ["Add ball to track", "Use visual signal instead of voice"], "intro": "Practice 2"}, {"id": 33, "name": "Fly Ball Tracking", "category": "Fielding: Pop Flies", "skills": ["Tracking", "Drop Step", "Communication"], "competitive": false, "iqLevel": "Medium", "duration": "15 min", "players": "Split groups", "equipment": "Balls, 4 cones (20x10 yd box)", "description": "Coach throws fly balls over players' heads. Players drop-step, sprint, and track with head turned. 'I got it!' call is mandatory before catching.", "coachingCue": "Call it before you catch it. 'I got it' is not optional \u2014 it's the play.", "source": "GoRout", "progressions": ["Add second fielder for communication reps", "Hit instead of throw"], "intro": "Practice 2\u20133"}, {"id": 34, "name": "1-2-3 Drill", "category": "Fielding: Pop Flies", "skills": ["Tracking", "Footwork", "Fly Ball Types"], "competitive": false, "iqLevel": "Medium", "duration": "12 min", "players": "Line at 1B edge of outfield grass", "equipment": "Balls, gloves", "description": "Players sprint in a straight line from first toward second. Coach in right-center fires three consecutive balls on the run: (1) line drive right at them, (2) line drive they must stretch for, (3) fly ball they must sprint to track down. Player never stops running.", "coachingCue": "There's a difference between running and sprinting. Sprint. Eyes on the ball the whole way.", "source": "Softball Tutor", "progressions": ["Increase gap between throws", "Player calls each catch type aloud"], "intro": "Practice 4+"}, {"id": 35, "name": "Wide Receiver Drill", "category": "Fielding: Pop Flies", "skills": ["Tracking", "Decision Making", "Footwork"], "competitive": false, "iqLevel": "Medium", "duration": "12 min", "players": "Line in outfield", "equipment": "Balls, 1 cone", "description": "Cone 20 feet from first player. On coach's call, player sprints to cone, breaks right or left at 45\u00b0. Coach doesn't reveal direction \u2014 player reads the ball. Ball released as they sprint.", "coachingCue": "Eyes on the ball the whole way. Your feet go where your eyes tell them.", "source": "SkillShark", "progressions": ["Increase cone distance", "Add a second cone"], "intro": "Practice 4+"}, {"id": 36, "name": "Over the Shoulder Drill", "category": "Fielding: Pop Flies", "skills": ["Tracking Over Shoulder", "Sprint Footwork"], "competitive": false, "iqLevel": "High", "duration": "10 min", "players": "Line in outfield", "equipment": "Balls, gloves", "description": "Coach hits or throws deep fly balls over outfielders' heads. Players must turn and run \u2014 not backpedal \u2014 tracking the ball over their shoulder.", "coachingCue": "Turn and run. Back-pedaling kills you on deep balls. Trust your speed, find the ball.", "source": "Softball Spot", "progressions": ["Vary left/right shoulder", "Add throw to second after catch"], "intro": "Practice 5+"}, {"id": 37, "name": "Colored Numbers", "category": "Fielding: Pop Flies", "skills": ["Tracking", "Focus"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Split groups", "equipment": "Balls with colored numbers, permanent marker", "description": "Write numbers 1\u20135 on balls in different colors. Girls must field the fly ball and call out the COLOR the number is written in. When mastered, switch to calling the NUMBER.", "coachingCue": "If you can read the color, your eyes were on the ball. That's the whole point.", "source": "Softball Tutor", "progressions": ["Start with color, advance to number", "Use for grounders too"], "intro": "Practice 3+"}, {"id": 38, "name": "OF Throws Home (Bucket Tower)", "category": "Fielding: Pop Flies", "skills": ["Outfield Throw", "Accuracy", "Crow Hop"], "competitive": true, "iqLevel": "Medium", "duration": "12 min", "players": "Outfield line", "equipment": "2 stacked buckets at home, balls", "description": "Stack two buckets at home plate. Coach hits fly balls and grounders to outfield. Players: catch flies, do-or-die field on grounders, then throw home to knock buckets down. Score for hits.", "coachingCue": "Throw through the cutoff first. If it needs to be cut, it'll be cut. Your job is a good throw.", "source": "Discuss Fastpitch", "progressions": ["Add a cutoff person", "Runner at third to create real pressure"], "intro": "Practice 5+"}, {"id": 39, "name": "Tag and Advance", "category": "Fielding: Pop Flies", "skills": ["Softball IQ", "Tag-Up Rules", "Outfield Throw"], "competitive": true, "iqLevel": "High", "duration": "12 min", "players": "Full team", "equipment": "Bases, balls", "description": "Runners at bases. Coach hits fly ball to outfield. Runners must tag up and advance before the throw gets back to the coach. Points for each base advanced.", "coachingCue": "Runners: don't leave early. Outfield: get it in fast. Both sides are being scored.", "source": "Discuss Fastpitch", "progressions": ["Full defense tries to throw runner out", "Multiple runners at once"], "intro": "Practice 6+"}, {"id": 40, "name": "Earthquake", "category": "Fielding: Pop Flies", "skills": ["Drop Step", "Footwork", "Reaction"], "competitive": false, "iqLevel": "Low", "duration": "7 min", "players": "Full team spread out", "equipment": "None (optional ball)", "description": "Players in athletic position. Coach calls a direction \u2014 'gap left!', 'straight back!', 'first base line!' \u2014 everyone sprints that way and freezes. Randomly add 'fly ball!' \u2014 they must call 'I got it!' before moving.", "coachingCue": "React before you think. Your drop step should happen before your brain catches up.", "source": "Original", "progressions": ["Add a ball occasionally", "Players call to each other instead of coach"], "intro": "Practice 2+"}, {"id": 41, "name": "Basic Tee Work", "category": "Hitting", "skills": ["Swing Mechanics", "Contact"], "competitive": false, "iqLevel": "Low", "duration": "10 min", "players": "Station (2\u20133 per tee)", "equipment": "Tee, balls, bats, net", "description": "10 swings per round. Balanced stance, grip, swing path, contact point. Move the tee to different locations (inside/outside/high/low).", "coachingCue": "Same stance, same load, every time. Build a routine at the plate.", "source": "GoRout / SkillShark", "progressions": ["Inside/outside tee positioning", "Freeze drill: hold load 2\u20133 sec before swinging"], "intro": "Practice 3+"}, {"id": 42, "name": "Rapid Fire Soft Toss", "category": "Hitting", "skills": ["Bat Speed", "Timing"], "competitive": false, "iqLevel": "Low", "duration": "10 min", "players": "Station (2\u20133)", "equipment": "Balls, bats, net", "description": "Partner tosses 5\u20137 balls in quick succession from the side. Hitter reloads between each. Builds bat speed and urgency.", "coachingCue": "Reload fast, swing faster. The pitcher doesn't wait for you.", "source": "GoRout", "progressions": ["Front toss (15\u201320 ft from behind L-screen)", "Mix high/low locations"], "intro": "Practice 4+"}, {"id": 43, "name": "Points Bunt Game", "category": "Hitting", "skills": ["Bunting", "Bat Control"], "competitive": true, "iqLevel": "Medium", "duration": "12 min", "players": "Full team rotating", "equipment": "Cones, balls, bats", "description": "Cones along 1st line, 3rd line, and toward pitcher's mound. Lines = 2 pts, middle = 1 pt. 4 bunts each. Highest total wins.", "coachingCue": "Bunt to a spot, not just 'somewhere fair.' Bat angle controls direction.", "source": "GoRout / SkillShark", "progressions": ["Move targets closer to lines", "Call the target before the pitch"], "intro": "Practice 5+"}, {"id": 44, "name": "Points-Based Hitting Derby", "category": "Hitting", "skills": ["Contact Quality", "Bat Path"], "competitive": true, "iqLevel": "Medium", "duration": "15 min", "players": "Draft teams", "equipment": "Tee or soft toss, balls, bats", "description": "Draft two teams. Ground ball = 1 pt, fly ball = 2 pts, line drive = 3 pts. 5 swings per player. Highest team total wins.", "coachingCue": "Line drives win games. Aim high, swing level.", "source": "GoRout", "progressions": ["Double-points round", "Subtract point for infield pop-up"], "intro": "Practice 5+"}, {"id": 45, "name": "Two-Color Ball", "category": "Hitting", "skills": ["Bat Speed", "Eye-Hand Coordination", "Focus"], "competitive": true, "iqLevel": "Medium", "duration": "10 min", "players": "Station", "equipment": "2 different color balls, bats", "description": "Coach holds two different-colored balls and tosses both simultaneously, calling one color as they're released. Batter must hit only the called color. Teaches tracking and keeping weight back.", "coachingCue": "Keep your weight back long enough to see the color. The patient hitter wins.", "source": "Softball Spot", "progressions": ["Coach calls color later in the toss", "Add high/low variation"], "intro": "Practice 5+"}, {"id": 46, "name": "Slow to Fast", "category": "Hitting", "skills": ["Weight Shift", "Swing Mechanics", "Bat Speed"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Station", "equipment": "Balls, bats, net", "description": "Player slowly shifts weight to back leg as ball approaches, then gradually accelerates bat speed to full at contact \u2014 and finishes at full speed through the zone.", "coachingCue": "Slow load, fast finish. Your swing builds speed \u2014 don't start fast, finish fast.", "source": "SkillShark", "progressions": ["Add front toss after tee work", "Combine with freeze drill"], "intro": "Practice 4+"}, {"id": 47, "name": "Freeze Drill (Hitting)", "category": "Hitting", "skills": ["Load Position", "Swing Mechanics"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Station", "equipment": "Tee, balls, bats", "description": "Player loads into hitting position and holds for 2\u20133 seconds before swinging. Forces awareness of load and weight distribution. Best for players who rush.", "coachingCue": "You rushed. Freeze and feel your position. That's where your power comes from.", "source": "GoRout", "progressions": ["Reduce freeze to 1 second", "Move to soft toss"], "intro": "Practice 3+"}, {"id": 48, "name": "Three-Target Hitting", "category": "Hitting", "skills": ["Bat Control", "Directional Hitting"], "competitive": true, "iqLevel": "Medium", "duration": "12 min", "players": "3 fielders + 1 hitter", "equipment": "Tee or soft toss, balls, bats", "description": "Three fielders 22 feet away, 2 feet apart. Hitter tries to hit the ball to each fielder on command. Develops bat control and hitting to all fields.", "coachingCue": "Hit to where you're told, not where it's comfortable. Control the bat.", "source": "Softball Spot", "progressions": ["Add fielders throwing back for double-drill", "Use front toss instead of tee"], "intro": "Practice 5+"}, {"id": 49, "name": "Knee Tap Bunting", "category": "Hitting", "skills": ["Bunting", "Balance", "Upper Body Mechanics"], "competitive": false, "iqLevel": "Low", "duration": "8 min", "players": "Station", "equipment": "Balls, bats", "description": "Player starts upright. As coach throws, player drops to one knee and executes the bunt. Dropping to one knee improves balance and isolates upper body for greater precision.", "coachingCue": "Drop and deaden. The goal is soft hands and a dead ball, not a swing.", "source": "SkillShark", "progressions": ["Progress to standing version", "Combine with target cones"], "intro": "Practice 4+"}, {"id": 50, "name": "Balloon Batting", "category": "Hitting", "skills": ["Stance", "Hip Rotation", "Swing Path"], "competitive": false, "iqLevel": "Low", "duration": "6 min", "players": "Station", "equipment": "Balloons, bats", "description": "Place a balloon between batter's thighs before they assume batting stance. As they swing, balloon must not drop or shift. Enforces proper hip width and weight distribution.", "coachingCue": "Keep the balloon. If it drops, your stance collapsed. Start over.", "source": "SkillShark", "progressions": ["Combine with soft toss", "Remove balloon once stance is locked in"], "intro": "Practice 3+"}, {"id": 51, "name": "Home Run Derby (Point Version)", "category": "Hitting", "skills": ["Contact Quality", "Fun", "Confidence"], "competitive": true, "iqLevel": "Low", "duration": "12 min", "players": "Full team rotating", "equipment": "Balls, bats, field", "description": "Points for hit type: single = 1, double = 2, triple = 3, homer = 4. Not just fence-balls \u2014 rewards all quality contact. Great end-of-practice energizer.", "coachingCue": "You don't have to swing for the fence. Smart contact wins.", "source": "Rush Order Tees", "progressions": ["Add fielders who try to make plays for bonus points", "Team format"], "intro": "Practice 6+"}, {"id": 52, "name": "Wait Wait Go", "category": "Base Running & Softball IQ", "skills": ["Situational Awareness", "Base Running", "Reading the Ball"], "competitive": false, "iqLevel": "High", "duration": "12 min", "players": "Full team rotating", "equipment": "Bases, balls", "description": "Runner at third. Coach hits grounder. Left side = freeze, break home on the throw to first. Right side = go immediately. Runner reads the ball, not the coach.", "coachingCue": "Read the ball off the bat, not the coach's voice. You need to be a step ahead.", "source": "GoRout", "progressions": ["Add second runner", "Batter runs to first for real pressure"], "intro": "Practice 6+"}, {"id": 53, "name": "Race to Home", "category": "Base Running & Softball IQ", "skills": ["Base Running", "Aggression", "Speed"], "competitive": true, "iqLevel": "Medium", "duration": "10 min", "players": "Pairs", "equipment": "Bases, balls", "description": "Two runners start at second. Coach hits to outfield. Both race to score. First to home wins.", "coachingCue": "Never assume you're out. Run until the play is made.", "source": "GoRout", "progressions": ["Start from first base", "Add outfielder to create a real throw"], "intro": "Practice 5+"}, {"id": 54, "name": "Where Does the Ball Go?", "category": "Base Running & Softball IQ", "skills": ["Softball IQ", "Situational Awareness", "Decision Making"], "competitive": false, "iqLevel": "High", "duration": "15 min", "players": "Full team (partial defense)", "equipment": "Cones, balls", "description": "Scenario set before every rep. Before each hit, ask one player: 'If the ball comes to you, where are you throwing?' Praise the right answer AND the honest 'I don't know.'", "coachingCue": "Know the play before the pitch. The best fielders decide before the ball is hit.", "source": "Hurricanes P2 plan", "progressions": ["Full defense with live runners", "Multiple scenarios per rep"], "intro": "Practice 4+"}, {"id": 55, "name": "21 Outs", "category": "Base Running & Softball IQ", "skills": ["Softball IQ", "Defensive Focus", "Accountability"], "competitive": true, "iqLevel": "High", "duration": "20 min", "players": "Full defense + baserunners", "equipment": "Full field", "description": "Full defense tries to make 21 consecutive outs without error. Any error = restart at zero.", "coachingCue": "Every out matters. There is no 'easy play' when you're at 19.", "source": "GoRout / JustBats", "progressions": ["Add aggressive baserunners", "Reduce to 9 outs early season"], "intro": "Mid-season"}, {"id": 56, "name": "Rounding Bases", "category": "Base Running & Softball IQ", "skills": ["Base Running", "Banana Curve", "Speed"], "competitive": false, "iqLevel": "Low", "duration": "10 min", "players": "Full team", "equipment": "Bases", "description": "Players practice the banana curve at each base at full speed \u2014 hitting the inside corner of the bag and maintaining momentum through the turn.", "coachingCue": "Hit the inside corner. Your momentum should carry you, not fight you.", "source": "GoRout", "progressions": ["Time each player", "Add a coach hitting a ball for them to react and read on rounding"], "intro": "Practice 4+"}, {"id": 57, "name": "Home-to-First Sprint", "category": "Base Running & Softball IQ", "skills": ["Speed", "Hustle", "Run Through First"], "competitive": true, "iqLevel": "Low", "duration": "8 min", "players": "Full team", "equipment": "Stopwatch, bases", "description": "Time every player weekly and post results. Celebrate personal bests. Also teaches running THROUGH first base, not slowing down to it.", "coachingCue": "Run THROUGH the bag, not TO it. Never look down at first base.", "source": "GoRout", "progressions": ["Weekly tracking", "Reward fastest improvement (not fastest player)"], "intro": "Practice 3+"}, {"id": 58, "name": "Around the World vs. Runner", "category": "Base Running & Softball IQ", "skills": ["Softball IQ", "Quick Release", "Base Running"], "competitive": true, "iqLevel": "High", "duration": "12 min", "players": "Full infield + 1 runner", "equipment": "Full infield, balls", "description": "Ball starts with catcher: C\u21922B\u21921B\u21923B\u21922B(touch)\u21921B\u2192home. Meanwhile runner goes around all bases. Infield wins if ball gets home first. Runner wins if they score first.", "coachingCue": "Infield: every throw has to be on target. Runner: run hard every single time.", "source": "Softball Spot", "progressions": ["Award points to whoever wins each race", "Two balls for advanced group"], "intro": "Practice 6+"}, {"id": 59, "name": "Pandemonium (5v5)", "category": "Base Running & Softball IQ", "skills": ["Softball IQ", "Base Running", "Teamwork"], "competitive": true, "iqLevel": "High", "duration": "15 min", "players": "Full team split", "equipment": "Full field, balls", "description": "Ball must be hit past the pitcher (no bunting). Batter runs on contact and keeps running until two defenders touch the ball. However many bases reached = points.", "coachingCue": "Runners: never stop unless they have it. Defense: two touches. Where are you standing to make that happen fastest?", "source": "Discuss Fastpitch", "progressions": ["Change number of touches needed", "Add second runner on base"], "intro": "Practice 6+"}, {"id": 60, "name": "Workup", "category": "Base Running & Softball IQ", "skills": ["Softball IQ", "All Positions", "Situational Awareness"], "competitive": true, "iqLevel": "High", "duration": "20 min", "players": "Full team", "equipment": "Full field", "description": "Coach pitches. Batters hit and run bases \u2014 if they make it all the way around, they hit again. When batter makes an out, they go to RF; 1B comes to bat; everyone shifts up one position.", "coachingCue": "Everyone's in this play. Whether you're in RF or at short, know what you'd do if the ball came to you.", "source": "Discuss Fastpitch", "progressions": ["Outfielder catches fly = comes to bat immediately", "Track how many times each player gets to bat"], "intro": "Practice 7+"}, {"id": 61, "name": "Baserunning Relay Race", "category": "Base Running & Softball IQ", "skills": ["Speed", "Base Running", "Team Hustle"], "competitive": true, "iqLevel": "Low", "duration": "8 min", "players": "Two teams", "equipment": "Bases", "description": "Team split \u2014 one group at home, one at second. On signal, players sprint in correct base order and tag the next teammate.", "coachingCue": "Run like there's a throw coming. Because in a real game, there always is.", "source": "SkillShark / Rush Order Tees", "progressions": ["Add rounding and sliding", "Time the relay and challenge team to beat it"], "intro": "Practice 4+"}, {"id": 62, "name": "Situational Scrimmage", "category": "Game Simulation", "skills": ["Softball IQ", "All Skills", "Pressure"], "competitive": true, "iqLevel": "High", "duration": "20 min", "players": "Full team", "equipment": "Full field", "description": "Set a specific game scenario before each play: two outs, runner on third, one-run game. Hit the ball live while runners execute.", "coachingCue": "Same focus as a game. Gameday reps start right here.", "source": "GoRout", "progressions": ["Coach sets score and inning for added pressure", "Players call scenarios"], "intro": "Practice 6+"}, {"id": 63, "name": "Three-Pitch Scrimmage", "category": "Game Simulation", "skills": ["Pitch Selection", "Softball IQ", "Urgency"], "competitive": true, "iqLevel": "Medium", "duration": "15 min", "players": "Full team", "equipment": "Full field", "description": "Each batter gets exactly 3 pitches. Creates urgency, teaches pitch selection, and keeps the game moving fast.", "coachingCue": "Three pitches. You don't get a fourth. Make a decision.", "source": "Revolution Softball Camp", "progressions": ["Make it 2-pitch", "Score like a real game"], "intro": "Practice 5+"}, {"id": 64, "name": "Situation Softball", "category": "Game Simulation", "skills": ["Softball IQ", "Reaction", "Communication"], "competitive": false, "iqLevel": "High", "duration": "15 min", "players": "Full team", "equipment": "Full field", "description": "Coach calls out a game situation ('Runners on first and third, one out!') and players immediately set up and react to a hit.", "coachingCue": "I shouldn't have to tell you twice. Hear the situation, know your job.", "source": "Revolution Softball Camp", "progressions": ["Players call their own backup assignments", "Use real runners instead of cones"], "intro": "Practice 5+"}, {"id": 65, "name": "Cutoff and Relay", "category": "Game Simulation", "skills": ["Communication", "Softball IQ", "Outfield Throw", "Cutoff Mechanics"], "competitive": false, "iqLevel": "High", "duration": "15 min", "players": "Full team (OF + IF + C)", "equipment": "Full field, fungo", "description": "Coach hits ball to outfield. Outfielder throws to cutoff. Catcher calls 'CUT 3!' or 'CUT 2!' or says nothing (let it go through). Cutoff responds immediately.", "coachingCue": "Catcher: you run this play. Be loud, be early, be right. Cutoff: nothing means let it go.", "source": "Softball Spot", "progressions": ["Add live baserunner", "Coach randomly calls where the play is"], "intro": "Practice 6+"}, {"id": 66, "name": "3 Outs vs. 2 Runs", "category": "Game Simulation", "skills": ["Softball IQ", "Pressure", "Teamwork"], "competitive": true, "iqLevel": "High", "duration": "15 min", "players": "Full team", "equipment": "Full field", "description": "Split into offense and defense. Defense tries to get 3 outs before offense scores 2 runs. Then switch.", "coachingCue": "Defense: every play matters \u2014 you don't have room for errors. Offense: two runs, make it count.", "source": "JustBats", "progressions": ["Change to 2 outs vs. 1 run for harder mode", "Keep running score across rounds"], "intro": "Practice 6+"}, {"id": 67, "name": "Infield/Outfield (Pre-Game Sim)", "category": "Game Simulation", "skills": ["Communication", "All Positions", "Energy"], "competitive": false, "iqLevel": "Medium", "duration": "12 min", "players": "Full team", "equipment": "Full field, fungo", "description": "Standard infield/outfield warm-up \u2014 but the key is ENERGY. The team must be loud and communicating every single play and rep. Run it like the game starts in 5 minutes.", "coachingCue": "The team that's loud in warmups is the team that's loose in games. Set the tone.", "source": "The Hitting Vault", "progressions": ["Add a timer and cut it shorter each time", "Run it before scrimmage days to build the pre-game habit"], "intro": "Practice 6+"}];
+
+const CAT_STYLES = {
+  "Communication & Focus": { bg:"#fef3c7", b:"#f59e0b", t:"#92400e", dot:"#f59e0b", emoji:"🗣️" },
+  "Throwing":              { bg:"#dbeafe", b:"#3b82f6", t:"#1e3a5f", dot:"#3b82f6", emoji:"💪" },
+  "Fielding: Ground Balls":{ bg:"#dcfce7", b:"#22c55e", t:"#14532d", dot:"#22c55e", emoji:"⬇️" },
+  "Fielding: Pop Flies":   { bg:"#e0f2fe", b:"#0ea5e9", t:"#0c4a6e", dot:"#0ea5e9", emoji:"⬆️" },
+  "Hitting":               { bg:"#fce7f3", b:"#ec4899", t:"#831843", dot:"#ec4899", emoji:"🥎" },
+  "Base Running & Softball IQ": { bg:"#ede9fe", b:"#8b5cf6", t:"#4c1d95", dot:"#8b5cf6", emoji:"🧠" },
+  "Game Simulation":       { bg:"#fff7ed", b:"#f97316", t:"#7c2d12", dot:"#f97316", emoji:"🏟️" },
+};
+const IQ_COLOR = { Low:"#22c55e", Medium:"#f59e0b", High:"#ef4444" };
+
+const categories = [...new Set(DRILLS.map(d => d.category))];
+const catCounts = {};
+categories.forEach(c => catCounts[c] = DRILLS.filter(d => d.category === c).length);
+
+let activeCat = "";
+let expandedId = null;
+
+// Build header
+document.getElementById("header-cats").innerHTML = categories.map(cat => {
+  const s = CAT_STYLES[cat];
+  return `<span><span style="color:${s.dot}">●</span> ${cat.replace("Fielding: ","")} <b>(${catCounts[cat]})</b></span>`;
+}).join("");
+document.getElementById("header-meta").textContent = `${DRILLS.length} total drills · 10 source websites`;
+
+// Build category filter select
+const catSelect = document.getElementById("filter-cat");
+categories.forEach(c => {
+  const o = document.createElement("option");
+  o.value = c; o.textContent = `${c} (${catCounts[c]})`;
+  catSelect.appendChild(o);
+});
+
+// Build category pills
+const pillsEl = document.getElementById("cat-pills");
+categories.forEach(cat => {
+  const s = CAT_STYLES[cat];
+  const btn = document.createElement("button");
+  btn.className = "cat-pill";
+  btn.dataset.cat = cat;
+  btn.style.borderColor = s.b;
+  btn.innerHTML = `<span class="dot" style="background:${s.dot}"></span>${s.emoji} ${cat.replace("Fielding: ","")} (${catCounts[cat]})`;
+  btn.style.color = s.t;
+  btn.style.background = s.bg;
+  btn.addEventListener("click", () => {
+    if (activeCat === cat) {
+      activeCat = "";
+      catSelect.value = "";
+    } else {
+      activeCat = cat;
+      catSelect.value = cat;
+    }
+    syncPills();
+    render();
+  });
+  pillsEl.appendChild(btn);
+});
+
+function syncPills() {
+  document.querySelectorAll(".cat-pill").forEach(btn => {
+    const cat = btn.dataset.cat;
+    const s = CAT_STYLES[cat];
+    const isActive = activeCat === cat;
+    btn.style.background = isActive ? s.b : s.bg;
+    btn.style.color = isActive ? "#fff" : s.t;
+    btn.querySelector(".dot").style.background = isActive ? "#fff" : s.dot;
+  });
+}
+
+function getFilters() {
+  return {
+    search: document.getElementById("search").value.toLowerCase(),
+    cat: document.getElementById("filter-cat").value,
+    comp: document.getElementById("filter-comp").value,
+    iq: document.getElementById("filter-iq").value,
+  };
+}
+
+function matchesDrill(d, f) {
+  if (f.search) {
+    const hay = [d.name, ...d.skills, d.description, d.source].join(" ").toLowerCase();
+    if (!hay.includes(f.search)) return false;
+  }
+  if (f.cat && d.category !== f.cat) return false;
+  if (f.comp === "competitive" && !d.competitive) return false;
+  if (f.comp === "non" && d.competitive) return false;
+  if (f.iq && d.iqLevel !== f.iq) return false;
+  return true;
+}
+
+function makeTag(text, bg, color, border) {
+  return `<span class="tag" style="background:${bg};color:${color};border-color:${border}">${text}</span>`;
+}
+
+function renderDrill(d) {
+  const s = CAT_STYLES[d.category] || { bg:"#f1f5f9", b:"#94a3b8", t:"#334155", dot:"#94a3b8", emoji:"⚾" };
+  const isOpen = expandedId === d.id;
+
+  const tags = [
+    makeTag(d.category, s.bg, s.t, s.b),
+    makeTag(`⏱ ${d.duration}`, "#f8fafc", "#475569", "#e2e8f0"),
+    makeTag(`IQ: ${d.iqLevel}`, "#f8fafc", IQ_COLOR[d.iqLevel], IQ_COLOR[d.iqLevel]+"40"),
+    makeTag(d.intro, "#f0fdf4", "#15803d", "#bbf7d0"),
+  ].join("");
+
+  const body = isOpen ? `
+    <div class="drill-body">
+      <div class="drill-body-inner">
+        <div>
+          <div class="section-label">📋 How It Works</div>
+          <div class="body-text">${d.description}</div>
+        </div>
+        <div class="cue-box">
+          <div class="section-label">💬 Coaching Cue</div>
+          <div class="cue-text">"${d.coachingCue}"</div>
+        </div>
+        <div class="meta-row">
+          <div class="meta-item"><div class="meta-label">👥 Players</div><div class="meta-val">${d.players}</div></div>
+          <div class="meta-item"><div class="meta-label">🎒 Equipment</div><div class="meta-val">${d.equipment}</div></div>
+          <div class="meta-item"><div class="meta-label">📚 Source</div><div class="meta-val">${d.source}</div></div>
+        </div>
+        <div>
+          <div class="section-label">🎯 Skills Trained</div>
+          <div class="skill-chips">
+            ${d.skills.map(sk => `<span class="skill-chip" style="background:${s.bg};color:${s.t};border-color:${s.b}">${sk}</span>`).join("")}
+          </div>
+        </div>
+        ${d.progressions && d.progressions.length ? `
+        <div class="progressions">
+          <div class="section-label">🔼 Progressions</div>
+          <ul>${d.progressions.map(p => `<li>${p}</li>`).join("")}</ul>
+        </div>` : ""}
+      </div>
+    </div>` : "";
+
+  return `
+    <div class="drill-card${isOpen ? " open" : ""}" data-id="${d.id}" style="${isOpen ? `border-color:${s.b}` : ""}">
+      <button class="drill-header" onclick="toggleDrill(${d.id})">
+        <div class="drill-icon" style="background:${s.bg};border-color:${s.b}">${s.emoji}</div>
+        <div class="drill-title-area">
+          <div class="drill-name-row">
+            <span class="drill-name">${d.name}</span>
+            ${d.competitive ? '<span class="competitive-badge">🏆 COMPETITIVE</span>' : ""}
+          </div>
+          <div class="drill-tags">${tags}</div>
+        </div>
+        <span class="chevron">▼</span>
+      </button>
+      ${body}
+    </div>`;
+}
+
+function render() {
+  const f = getFilters();
+  const filtered = DRILLS.filter(d => matchesDrill(d, f));
+  const list = document.getElementById("drill-list");
+  const empty = document.getElementById("empty");
+  document.getElementById("drill-count").textContent = `${filtered.length} / ${DRILLS.length}`;
+  if (filtered.length === 0) {
+    list.innerHTML = "";
+    empty.style.display = "block";
+  } else {
+    empty.style.display = "none";
+    list.innerHTML = filtered.map(renderDrill).join("");
+  }
+}
+
+function toggleDrill(id) {
+  expandedId = expandedId === id ? null : id;
+  render();
+  if (expandedId) {
+    setTimeout(() => {
+      const el = document.querySelector(`[data-id="${id}"]`);
+      if (el) el.scrollIntoView({ behavior:"smooth", block:"nearest" });
+    }, 50);
+  }
+}
+
+// Wire up filters
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("filter-comp").addEventListener("change", render);
+document.getElementById("filter-iq").addEventListener("change", render);
+document.getElementById("filter-cat").addEventListener("change", e => {
+  activeCat = e.target.value;
+  syncPills();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
